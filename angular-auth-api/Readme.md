@@ -15,7 +15,7 @@
 
 - add-migration (migration name)
 - update-database
-- <Trust Server Certificate = True;> MUST be included in the appsettings.json, connectionstrings
+- "Trust Server Certificate = True;" MUST be included in the appsettings.json, connectionstrings
 
 ## Installed Packages
 - Microsoft.EntityFrameworkCore
