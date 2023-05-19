@@ -1,4 +1,5 @@
 ﻿using angular_auth_api.Context;
+using angular_auth_api.Helpers;
 using angular_auth_api.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,15 @@ namespace angular_auth_api.Controllers
             
             // Check if a body field is not null
             // if (string.IsNullOrEmpty(userObj.Username)) { }
+
+            // Hash password
+            userObj.Password = PasswordHasher.HashPassword(userObj.Password);
+
+            // Assign default role as 'user'
+            userObj.Role = "User";
+
+            // Assign token as empty string
+            userObj.Token = "";
 
             await _authContext.Users.AddAsync(userObj);
             await _authContext.SaveChangesAsync();
