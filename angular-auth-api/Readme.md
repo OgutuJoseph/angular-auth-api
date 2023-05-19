@@ -35,6 +35,7 @@ builder.Services.AddCors(option =>
 - Then below (above useAuthorization)
 - Add the line below
 - > app.UseCors("MyPolicy")
+- > app.UseAuthentication() (optionally)
 
 ## Allow Cors (option 2)
 
