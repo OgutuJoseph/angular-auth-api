@@ -17,6 +17,31 @@
 - update-database
 - "Trust Server Certificate = True;" MUST be included in the appsettings.json, connectionstrings
 
+## Allow Cors (option 1)
+
+- Go to Promram.cs
+- Add Below
+builder.Services.AddCors(option =>
+{
+    option.AddPolicy("MyPolicy", builder =>
+    {
+        builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+    });
+});
+
+- Then below (above useAuthorization)
+- Add the line below
+- > app.UseCors("MyPolicy")
+
+## Allow Cors (option 2)
+
+- Still on Program.cs, above useAuthorization
+- Add line below 
+- > app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+
 ## Installed Packages
 - Microsoft.EntityFrameworkCore
 - Microsoft.EntityFrameworkCore.SqlServer
