@@ -4,6 +4,8 @@ using angular_auth_api.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace angular_auth_api.Controllers
 {
@@ -45,7 +47,24 @@ namespace angular_auth_api.Controllers
             {
                 return BadRequest();
             }
-            
+
+            // Field validations (username[unique], email[unique], password[strength])
+            if (await CheckUserNameExistAsync(userObj.Username))
+                return BadRequest(new
+                {
+                    Message = "Username already exists in the database."
+                });
+
+            if (await CheckUserEmailExistAsync(userObj.Email))
+                return BadRequest(new
+                {
+                    Message = "Email already exists in the database."
+                });
+
+            var pass = CheckPasswordStrength(userObj.Password);
+            if (!string.IsNullOrEmpty(pass))
+                return BadRequest(new { Message = pass.ToString() });
+
             // Check if a body field is not null
             // if (string.IsNullOrEmpty(userObj.Username)) { }
 
@@ -65,6 +84,34 @@ namespace angular_auth_api.Controllers
             {
                 Message = "User registered successfully."
             });
+        }
+
+        // Check if field exists (Method 1)
+        //private async Task<bool> CheckUserNameExistAsync(string username)
+        //{
+        //    return await _authContext.Users.AnyAsync(x => x.Username == username);
+        //}
+
+        // Check if field exists (Method 2)
+        private Task<bool> CheckUserNameExistAsync(string username)
+            => _authContext.Users.AnyAsync(x => x.Username == username);
+
+        private Task<bool> CheckUserEmailExistAsync(string email)
+            => _authContext.Users.AnyAsync(x => x.Email == email);
+
+        private string CheckPasswordStrength(string password)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (password.Length < 8)
+                sb.Append("Minimum password length should be 8 characters." + Environment.NewLine);
+
+            if (!(Regex.IsMatch(password, "[a-z]") && Regex.IsMatch(password, "[A-Z]") && Regex.IsMatch(password, "[0-9]")))
+                sb.Append("Password should be alphanumeric and contain both upper and lower case characterers." + Environment.NewLine);
+
+            if (!(Regex.IsMatch(password, "[<,>,@,!,#,$,%,^,&,*,(,),_,+,\\[,\\],{,},?,:,;,|,',\\,.,/,~,`,-,=]")))
+                sb.Append("Password should contain special characters" + Environment.NewLine);
+
+            return sb.ToString();
         }
     }
 }
