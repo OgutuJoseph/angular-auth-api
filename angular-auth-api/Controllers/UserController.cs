@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 
 namespace angular_auth_api.Controllers
 {
@@ -152,6 +153,7 @@ namespace angular_auth_api.Controllers
         }
 
         /* 3. Get All Users **/
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<User>> GetAllUsers()
         {
