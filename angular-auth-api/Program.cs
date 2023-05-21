@@ -43,6 +43,7 @@ builder.Services.AddAuthentication(x =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("veryverysecret.....")),
         ValidateAudience = false,
         ValidateIssuer = false,
+        ClockSkew = TimeSpan.Zero // To enforce the set time for expiry opposed to the default 5 minutes
     };
 });
 
