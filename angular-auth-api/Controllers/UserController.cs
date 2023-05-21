@@ -27,7 +27,6 @@ namespace angular_auth_api.Controllers
                 return BadRequest();
             }
 
-            Console.Write("User Here: ", userObj);
             var user = await _authContext.Users.FirstOrDefaultAsync(x=>x.Username == userObj.Username);
             if (user == null)
             {
