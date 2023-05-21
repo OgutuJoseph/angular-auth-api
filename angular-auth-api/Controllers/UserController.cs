@@ -99,6 +99,7 @@ namespace angular_auth_api.Controllers
         private Task<bool> CheckUserEmailExistAsync(string email)
             => _authContext.Users.AnyAsync(x => x.Email == email);
 
+        // Enforce password strength
         private string CheckPasswordStrength(string password)
         {
             StringBuilder sb = new StringBuilder();
