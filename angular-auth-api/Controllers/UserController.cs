@@ -4,8 +4,11 @@ using angular_auth_api.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
 namespace angular_auth_api.Controllers
 {
@@ -19,6 +22,7 @@ namespace angular_auth_api.Controllers
             _authContext = appDbContext;
         }
 
+        /* 1. Login User  **/
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] User userObj)
         {
@@ -38,12 +42,16 @@ namespace angular_auth_api.Controllers
                 return BadRequest(new { Message = "Password is incorrect" });
             }
 
+            user.Token = CreateJwt(user);
+
             return Ok(new
             {
+                Token = user.Token,
                 Message = "Login successful."
             });
         }
 
+        /* 2. Register User  **/
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] User userObj)
         {
@@ -91,20 +99,20 @@ namespace angular_auth_api.Controllers
             });
         }
 
-        // Check if field exists (Method 1)
+        /** i. Check if field exists (Method 1) **/
         //private async Task<bool> CheckUserNameExistAsync(string username)
         //{
         //    return await _authContext.Users.AnyAsync(x => x.Username == username);
         //}
 
-        // Check if field exists (Method 2)
+        /* ii. Check if field exists (Method 2) **/
         private Task<bool> CheckUserNameExistAsync(string username)
             => _authContext.Users.AnyAsync(x => x.Username == username);
 
         private Task<bool> CheckUserEmailExistAsync(string email)
             => _authContext.Users.AnyAsync(x => x.Email == email);
 
-        // Enforce password strength
+        /* iii. Enforce password strength **/
         private string CheckPasswordStrength(string password)
         {
             StringBuilder sb = new StringBuilder();
@@ -118,6 +126,36 @@ namespace angular_auth_api.Controllers
                 sb.Append("Password should contain special characters" + Environment.NewLine);
 
             return sb.ToString();
+        }
+
+        /* iv. Create JWT token **/
+        private string CreateJwt(User user)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes("veryverysecret.....");
+            var identity = new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+            });
+            var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = identity,
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = credentials,
+            };
+
+            var token = jwtTokenHandler.CreateToken(tokenDescriptor); 
+            return jwtTokenHandler.WriteToken(token);
+        }
+
+        /* 3. Get All Users **/
+        [HttpGet]
+        public async Task<ActionResult<User>> GetAllUsers()
+        {
+            return Ok(await _authContext.Users.ToListAsync());
         }
     }
 }

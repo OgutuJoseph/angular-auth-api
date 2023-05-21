@@ -46,5 +46,5 @@ builder.Services.AddCors(option =>
 ## Installed Packages
 - Microsoft.EntityFrameworkCore
 - Microsoft.EntityFrameworkCore.SqlServer
-- Microsoft.AspNetCore.Authentication.JwtBearer (Confirm compatible version with net core)
+- Microsoft.AspNetCore.Authentication.JwtBearer (For JWT Token, Confirm compatible version with net core)
 - Microsoft.EntityFrameworkCore.Tools
