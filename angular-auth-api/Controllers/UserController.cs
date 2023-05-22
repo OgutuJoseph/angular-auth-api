@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Cryptography;
+using angular_auth_api.Models.Dto;
 
 namespace angular_auth_api.Controllers
 {
@@ -43,12 +45,26 @@ namespace angular_auth_api.Controllers
                 return BadRequest(new { Message = "Password is incorrect" });
             }
 
-            user.Token = CreateJwt(user);
+            /* Before introduction of refresh token */
+            // user.Token = CreateJwt(user);
 
-            return Ok(new
+            //return Ok(new
+            //{
+            //    Token = user.Token,
+            //    Message = "Login successful."
+            //});
+
+            user.Token = CreateJwt(user);
+            var newAccessToken = user.Token;
+            var newRefreshToken = CreateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            await _authContext.SaveChangesAsync();
+
+            /* After introduction of refresh token */
+            return Ok(new TokenApiDto()
             {
-                Token = user.Token,
-                Message = "Login successful."
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
             });
         }
 
@@ -137,19 +153,64 @@ namespace angular_auth_api.Controllers
             var identity = new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+                /* Initial before addition of refresh token; concated first and last name **/
+                //new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+                
+                /* Afer addition of refresh token, used username **/
+                new Claim(ClaimTypes.Name, $"{user.Username}")
             });
             var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = identity,
-                Expires = DateTime.Now.AddDays(1),
+                //Expires = DateTime.Now.AddDays(1),
+                Expires = DateTime.Now.AddSeconds(30),
                 SigningCredentials = credentials,
             };
 
             var token = jwtTokenHandler.CreateToken(tokenDescriptor); 
             return jwtTokenHandler.WriteToken(token);
+        }
+
+        /* v. Create Refresh token **/
+        private string CreateRefreshToken()
+        {
+            var tokenBytes = RandomNumberGenerator.GetBytes(64);
+            var refreshToken = Convert.ToBase64String(tokenBytes);
+
+            var tokenInUser = _authContext.Users
+                .Any(a=>a.RefreshToken == refreshToken);
+
+            if (tokenInUser)
+            {
+                return CreateRefreshToken();
+            }
+
+            return refreshToken;
+        }
+
+        /* vi. **/
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var key = Encoding.ASCII.GetBytes("veryverysecret.....");
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateLifetime = false,
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken securityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("This is an invalid token.");
+            return principal;
         }
 
         /* 3. Get All Users **/
