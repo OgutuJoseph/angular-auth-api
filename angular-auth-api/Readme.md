@@ -48,3 +48,9 @@ builder.Services.AddCors(option =>
 - Microsoft.EntityFrameworkCore.SqlServer
 - Microsoft.AspNetCore.Authentication.JwtBearer (For JWT Token, Confirm compatible version with net core)
 - Microsoft.EntityFrameworkCore.Tools
+
+## To Add Migration
+- Modify the model file (e.g. User.cs)
+- Navigate to View>Other Windows > Package Manager Console
+- > add-migration addedRefreshToken
+- > update-database
