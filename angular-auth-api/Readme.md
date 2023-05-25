@@ -48,6 +48,7 @@ builder.Services.AddCors(option =>
 - Microsoft.EntityFrameworkCore.SqlServer
 - Microsoft.AspNetCore.Authentication.JwtBearer (For JWT Token, Confirm compatible version with net core)
 - Microsoft.EntityFrameworkCore.Tools
+- NETCore.MailKit (For email integration)
 
 ## To Add Migration
 - Modify the model file (e.g. User.cs)

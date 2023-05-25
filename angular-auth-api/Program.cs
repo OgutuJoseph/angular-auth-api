@@ -1,4 +1,5 @@
 using angular_auth_api.Context;
+using angular_auth_api.UtilityService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,8 @@ builder.Services.AddAuthentication(x =>
         ClockSkew = TimeSpan.Zero // To enforce the set time for expiry opposed to the default 5 minutes
     };
 });
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 
