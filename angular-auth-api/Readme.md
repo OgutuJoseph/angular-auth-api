@@ -1,4 +1,4 @@
-# Project Resources
+# Project Resources.
 
 ## Notes
 - db context can be saved in any prefered directory: Context(like in this case), Data(like in auth crud) etc etc; with a prefered filename
